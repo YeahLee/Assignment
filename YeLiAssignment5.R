@@ -16,9 +16,6 @@ print("yli247@ucsc.edu")
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 # 1
 library(ggplot2)
-library(tidyr)
-library(dplyr)
-library(foreign)
 #---a---#
 diamonds <- diamonds %>% 
   mutate(
@@ -53,9 +50,10 @@ c + geom_violin()+geom_jitter(alpha=0.02)
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 # 3
 #---a---#
+library(foreign)
 org<-read.dta("/Users/liye/Documents/Graduate/UCSC/Academic/Winter/294lab/econ294_2015/data/org_example.dta")
 
-
+library(dplyr)
 org1 <- org%>% 
   mutate(
     date = paste(year, month, "01", sep = "-"),

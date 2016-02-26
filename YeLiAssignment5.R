@@ -16,6 +16,9 @@ print("yli247@ucsc.edu")
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 # 1
 library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(foreign)
 #---a---#
 diamonds <- diamonds %>% 
   mutate(
@@ -50,10 +53,9 @@ c + geom_violin()+geom_jitter(alpha=0.02)
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 # 3
 #---a---#
-library(foreign)
 org<-read.dta("/Users/liye/Documents/Graduate/UCSC/Academic/Winter/294lab/econ294_2015/data/org_example.dta")
 
-library(dplyr)
+
 org1 <- org%>% 
   mutate(
     date = paste(year, month, "01", sep = "-"),
@@ -62,7 +64,7 @@ org1 <- org%>%
   filter(!is.na(rw)) %>%
   tbl_df()
 #generate summary table of real wage
-RM<-org1 %>%
+RW<-org1 %>%
   group_by(year,month) %>%
   summarize(
     qtl10=quantile(rw,0.10),
@@ -73,7 +75,7 @@ RM<-org1 %>%
     n=n()
   )
 #generate date variable
-RM <- RM%>% 
+RW <- RW%>% 
   mutate(
     date = paste(year, month, "01", sep = "-"),
     date = as.Date(date, format = "%Y-%m-%d")
@@ -81,7 +83,7 @@ RM <- RM%>%
   tbl_df()
 
 #plot
-aa<-ggplot(RM, aes(date, Median.Rw))
+aa<-ggplot(RW, aes(date, Median.Rw))
   
 aa+geom_line()+lims(y=c(0,50)) +
   geom_ribbon(aes(ymin=qtl10, 
@@ -94,20 +96,20 @@ aa+geom_line()+lims(y=c(0,50)) +
 
 #---b---#
 #generate summary table including group of educ of real wage
-RMb<-org1 %>%
+RWb<-org1 %>%
   group_by(year,month,educ) %>%
   summarize(
     Median.Rw=median(rw)
   )
 
 #generate date variable
-RMb <- RMb%>% 
+RWb <- RWb%>% 
   mutate(
     date = paste(year, month, "01", sep = "-"),
     date = as.Date(date, format = "%Y-%m-%d")
   ) %>%
   tbl_df()
 #plot
-bb<-ggplot(RMb, aes(date, Median.Rw,group=educ))
+bb<-ggplot(RWb, aes(date, Median.Rw,group=educ))
 bb+geom_line(aes(colour=educ))
   

@@ -1,0 +1,127 @@
+---
+title: "ECON294.lab.Final.YeLi.1505112"
+output: html_document
+---
+
+#Set up
+```{r set up,warning=FALSE,echo=F,message=FALSE}
+library(ggplot2)
+library("dplyr")  
+library("RSQLite") 
+library("nycflights13") 
+
+my_db <- nycflights13_sqlite()
+
+
+flights_weather1<-left_join(
+  tbl(my_db, "flights"),
+  tbl(my_db, "weather"),
+  by = c("year","month","day","hour"))%>% 
+  collect() %>%
+  mutate(canceled = is.na(arr_time))
+
+flights_weather1$month<-as.factor(flights_weather1$month)
+flights_weather2<-subset(flights_weather1,arr_delay>=60|dep_delay>=60)
+
+```
+
+#---(a)Weather---#
+###Regression
+```{r regression,warning=FALSE,echo=T,eval=F,message=FALSE}
+reg_delayed<-lm(dep_delay~temp+dewp+humid+wind_dir+wind_speed++wind_gust+precip+pressure+visib,flights_weather1)
+summary(reg_delayed)
+
+reg_canceled<-lm(canceled~temp+dewp+humid+wind_dir+wind_speed++wind_gust+precip+pressure+visib,flights_weather1)
+summary(reg_canceled)
+```
+From the regression results,dewpoints, preciptation and wind speed has significantly increased delay, while only dewpoints has significanlty increased the probability of being canceled.
+
+###Graph
+Below is the relationship between preciptation and delayed.
+```{r graph,warning=FALSE,echo=T,message=FALSE}
+a<-ggplot(data = sample_n(flights_weather2, 10000),aes(x=precip,y=dep_delay))
+a+geom_point()+geom_line()
+```
+
+#---(b)Time---#
+
+###Group_by
+```{r group_by,warning=FALSE,echo=T,message=FALSE}
+
+delaysum<- tbl(my_db, "flights") %>%
+  group_by(year, month, day) %>%
+  summarize(
+    delaymean = mean(dep_delay)
+  ) %>% collect()
+
+```
+###1.Time of Day
+```{r, warning=F,echo=F,message=FALSE}
+
+c<-ggplot(delaysum,aes(x=day,y=delaymean)) 
+c+geom_point()+geom_line()
+```
+From graph, it looks like around 9am, there's a significant higher delay than others.
+
+###2.Day of Month
+```{r, warning=F,echo=F,message=FALSE}
+
+d<-ggplot(delaysum,aes(x=month,y=delaymean)) 
+d+geom_point()+geom_line()
+```
+From graph, it looks light March has a significant higher chance of delay.
+
+###3.Time of year(Regression)
+```{r regression2,warning=FALSE,echo=T,eval=F,message=FALSE}
+reg1<-lm(dep_delay~month,flights_weather2)
+summary(reg1)
+reg2<-lm(canceled~month,flights_weather2)
+summary(reg2)
+```
+Month 1, 6 and 9 has significant delay. This might due to high volume of passengers
+Month 7 has significant cancel. This might due to high probability of preciptation.
+
+
+#---(c)Airport Destination---#
+
+```{r,warning=FALSE,message=FALSE}
+
+dest_delay<-flights_weather2 %>%
+  filter(!is.na(arr_delay)) %>%
+  group_by(dest) %>%
+  summarize(
+    delay=mean(arr_delay),
+    n=n()
+  ) %>%
+  arrange(-delay) %>%
+  print(head(5))
+```
+The destination that has highest average delay is CAE, TUL and OKC.
+
+
+#---(d)characteristics of the plane-----#
+```{r,echo=F,warning = F,include=F}
+my_db <- nycflights13_sqlite()
+flights_planes1<-left_join(
+  tbl(my_db, "flights"),
+  tbl(my_db, "planes"),
+  by = "tailnum")%>% 
+  collect() %>%
+  mutate(canceled = is.na(arr_time))
+```
+
+###Regression
+```{r,echo=F,warning = F,include=T}
+r1<-lm(dep_delay~engines+seats+engine,flights_planes1)
+summary(r1)
+r2<-lm(canceled~engines+seats+engine,flights_planes1)
+summary(r2)
+```
+The results show that engines will significantly increase the probability of being canceled. 
+
+
+
+
+
+
+
